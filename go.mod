@@ -1,6 +1,6 @@
 module github.com/xehrad/git
 
-go 1.24.3
+go 1.25.5
 
 require (
 	code.gitea.io/sdk/gitea v0.22.1
