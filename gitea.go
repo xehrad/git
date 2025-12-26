@@ -162,8 +162,8 @@ func (g *GiteaAdapter) CreateRepository(ctx context.Context, projectID uuid.UUID
 	opt := gitea.CreateRepoOption{
 		Name:          projectID.String(),
 		Description:   "Managed by GitAPI",
-		Private:       true,
-		AutoInit:      true, // Initializes with a default branch so it's immediately usable
+		Private:       g.env.CreateRepoPrivate,
+		AutoInit:      g.env.CreateRepoInit, // Initializes with a default branch so it's immediately usable
 		DefaultBranch: g.env.Branch,
 	}
 

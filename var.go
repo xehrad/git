@@ -34,12 +34,13 @@ type (
 
 	// GitConfig holds Gitea connection settings
 	GitConfig struct {
-		BaseURL string `envconfig:"ORCHESTRATOR_GIT_BASE_URL" required:"true"` // e.g., "http://gitea.default.svc.cluster.local:3000"
-		Token   string `envconfig:"ORCHESTRATOR_GIT_TOKEN"    required:"true"` // Personal Access Token for Gitea
-		IdName  string `envconfig:"ORCHESTRATOR_GIT_ID_NAME"     default:"ZamineBazi Orchestrator"`
-		IdMail  string `envconfig:"ORCHESTRATOR_GIT_ID_EMAIL"    default:"bot@zaminebazi.com"`
-		Owner   string `envconfig:"ORCHESTRATOR_GIT_OWNER_NAME"  default:"zaminebazi"`
-		Branch  string `envconfig:"ORCHESTRATOR_GIT_BRANCH_NAME" default:"main"`
+		BaseURL           string `envconfig:"ORCHESTRATOR_GIT_BASE_URL" required:"true"` // e.g., "http://gitea.default.svc.cluster.local:3000"
+		Token             string `envconfig:"ORCHESTRATOR_GIT_TOKEN"    required:"true"` // Personal Access Token for Gitea
+		IdName            string `envconfig:"ORCHESTRATOR_GIT_ID_NAME"      default:"ZamineBazi Orchestrator"`
+		IdMail            string `envconfig:"ORCHESTRATOR_GIT_ID_EMAIL"     default:"bot@zaminebazi.com"`
+		Owner             string `envconfig:"ORCHESTRATOR_GIT_OWNER_NAME"   default:"zaminebazi"`
+		Branch            string `envconfig:"ORCHESTRATOR_GIT_BRANCH_NAME"  default:"main"`
+		CreateRepoPrivate bool   `envconfig:"ORCHESTRATOR_GIT_REPO_PRIVATE" default:"false"`
+		CreateRepoInit    bool   `envconfig:"ORCHESTRATOR_GIT_REPO_INIT"    default:"true"`
 	}
 )
-
