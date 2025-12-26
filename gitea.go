@@ -175,36 +175,20 @@ func (g *GiteaAdapter) CreateRepository(ctx context.Context, projectID uuid.UUID
 	return repo.FullName, nil
 }
 
-// ScaffoldParallel creates or updates multiple files
-func (g *GiteaAdapter) ScaffoldParallel(ctx context.Context, projectID uuid.UUID, files []FileNode) error {
-	log.Printf("[Git Log] Scaffold project: %s", projectID)
+// ScaffoldProjectFiles creates or updates multiple files
+func (g *GiteaAdapter) ScaffoldProjectFiles(ctx context.Context, projectID uuid.UUID, files []FileNode) error {
+	log.Printf("[Git] Starting Serial Scaffold for %s (%d files)", projectID, len(files))
 
-	// Limit concurrency to avoid hitting rate limits
-	sem := make(chan struct{}, 4)
-	errChan := make(chan error, len(files))
-
-	for _, f := range files {
-		sem <- struct{}{} // Acquire token
-		go func(file FileNode) {
-			defer func() { <-sem }() // Release token
-
-			msg := fmt.Sprintf("Scaffold path: %s", file.Path)
-			err := g.CommitFile(ctx, projectID, file.Path, *file.Content, msg)
-			if err != nil {
-				log.Printf("[Git Err] Scaffold project: %s path:%s err: %s",
-					projectID, file.Path, err.Error())
-				errChan <- fmt.Errorf("failed %s: %w", file.Path, err)
-			} else {
-				errChan <- nil
-			}
-		}(f)
-	}
-
-	// Wait for all and Return first error encountered
-	for range files {
-		if err := <-errChan; err != nil {
-			return err
+	for i, file := range files {
+		log.Printf("[%d/%d] Committing %s...", i+1, len(files), file.Path)
+		msg := fmt.Sprintf("Scaffold path: %s", file.Path)
+		err := g.CommitFile(ctx, projectID, file.Path, *file.Content, msg)
+		if err != nil {
+			log.Printf("[Git Err] Scaffold project: %s path:%s err: %s",
+				projectID, file.Path, err.Error())
 		}
 	}
+
+	log.Printf("[Git] Scaffold completed successfully for %s", projectID)
 	return nil
 }
