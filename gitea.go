@@ -180,7 +180,7 @@ func (g *GiteaAdapter) ScaffoldParallel(ctx context.Context, projectID uuid.UUID
 	log.Printf("[Git Log] Scaffold project: %s", projectID)
 
 	// Limit concurrency to avoid hitting rate limits
-	sem := make(chan struct{}, 8)
+	sem := make(chan struct{}, 4)
 	errChan := make(chan error, len(files))
 
 	for _, f := range files {
@@ -188,9 +188,11 @@ func (g *GiteaAdapter) ScaffoldParallel(ctx context.Context, projectID uuid.UUID
 		go func(file FileNode) {
 			defer func() { <-sem }() // Release token
 
-			// Re-use your existing CommitFile logic (which handles create/update check)
-			err := g.CommitFile(ctx, projectID, file.Path, *file.Content, "Scaffold: "+file.Path)
+			msg := fmt.Sprintf("Scaffold path: %s", file.Path)
+			err := g.CommitFile(ctx, projectID, file.Path, *file.Content, msg)
 			if err != nil {
+				log.Printf("[Git Err] Scaffold project: %s path:%s err: %s",
+					projectID, file.Path, err.Error())
 				errChan <- fmt.Errorf("failed %s: %w", file.Path, err)
 			} else {
 				errChan <- nil
