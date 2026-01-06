@@ -22,14 +22,14 @@ type (
 
 	// FileNode represents a file or directory in the project
 	FileNode struct {
-		Name     string   `json:"name"`
-		Path     string   `json:"path"`
-		Type     FileType `json:"type"`
-		Target   *string  `json:"target"` // `target` is populated when `type` is `symlink`, otherwise null
-		SHA      string   `json:"sha"`
-		Size     int64    `json:"size"`
-		Encoding *string  `json:"encoding,omitempty"` // `encoding` is populated when `type` is `file`, otherwise null
-		Content  *string  `json:"content,omitempty"`  // Content is empty for directories or list operations
+		Name     string     `json:"name"`
+		Path     string     `json:"path"`
+		Type     FileType   `json:"type"`
+		Target   *string    `json:"target,omitempty"` // `target` is populated when `type` is `symlink`, otherwise null
+		SHA      string     `json:"sha"`
+		Size     int64      `json:"size"`
+		Content  *string    `json:"content,omitempty"`  // Content is empty for directories or list operations
+		Children []FileNode `json:"children,omitempty"` // Children is populated for directories when listing recursively
 	}
 
 	// GitConfig holds Gitea connection settings

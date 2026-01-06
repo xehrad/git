@@ -64,11 +64,16 @@ func (g *GiteaAdapter) GetFile(ctx context.Context, projectID uuid.UUID, path st
 }
 
 // ListFiles retrieves files. If path is empty, lists root.
+// If path not set ("", "."), it recursively fetches all files and directories.
 func (g *GiteaAdapter) ListFiles(ctx context.Context, projectID uuid.UUID, path string) ([]FileNode, error) {
 	log.Printf("[Git Log] ListFiles projectID:%s, path:%s", projectID, path)
+	isRecursive := false
+	switch path {
+	case ".", "":
+		path = "" // Empty string for root in Gitea API
+		isRecursive = true
+	}
 
-	// GetContents returns a list of items if the path is a directory.
-	// If path is empty "", it returns the root directory content.
 	entries, _, err := g.client.ListContents(g.env.Owner, projectID.String(), g.env.Branch, path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list contents at path '%s': %w", path, err)
@@ -76,27 +81,31 @@ func (g *GiteaAdapter) ListFiles(ctx context.Context, projectID uuid.UUID, path 
 
 	var files []FileNode
 	for _, entry := range entries {
-		var nodeType FileType
-		switch entry.Type {
-		case "file":
-			nodeType = FileTypeFile
-		case "dir":
-			nodeType = FileTypeDir
-		case "symlink":
-			nodeType = FileTypeSymlink
-		}
-
-		files = append(files, FileNode{
+		node := FileNode{
 			Name:     entry.Name,
 			Path:     entry.Path,
-			Type:     nodeType,
 			Target:   entry.Target,
 			SHA:      entry.SHA,
 			Size:     entry.Size,
-			Encoding: entry.Encoding,
-		})
-	}
+		}
+		switch entry.Type {
+		case "symlink":
+			node.Type = FileTypeSymlink
+		case "file":
+			node.Type = FileTypeFile
+		case "dir":
+			node.Type = FileTypeDir
+			// If recursive mode, fetch its contents
+			if isRecursive {
+				if node.Children, err = g.ListFiles(ctx, projectID, entry.Path); err != nil {
+					// Continue with other entries even if one directory fails
+					log.Printf("[Git Warning] Failed to list directory '%s': %v", entry.Path, err)
+				}
+			}
+		}
 
+		files = append(files, node)
+	}
 	return files, nil
 }
 
